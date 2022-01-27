@@ -111,16 +111,19 @@ const aiImporterDesc *glTF2Importer::GetInfo() const {
     return &desc;
 }
 
-bool glTF2Importer::CanRead(const std::string &pFile, IOSystem *pIOHandler, bool checkSig ) const {
-	const std::string &extension = GetExtension(pFile);
+bool glTF2Importer::CanRead(const std::string &pFile, IOSystem *pIOHandler, bool /* checkSig */) const {
+    const std::string &extension = GetExtension(pFile);
 
-	if (!checkSig && (extension != "gltf") && (extension != "glb"))
-		return false;
+    if (extension != "gltf" && extension != "glb") {
+        return false;
+    }
 
-	if (pIOHandler) {
-		glTF2::Asset asset(pIOHandler);
-		return asset.CanRead(pFile, extension == "glb");
-	}
+    if (pIOHandler) {
+        glTF2::Asset asset(pIOHandler);
+        asset.Load(pFile, extension == "glb");
+        std::string version = asset.asset.version;
+        return !version.empty() && version[0] == '2';
+    }
 
     return false;
 }
@@ -299,7 +302,6 @@ static aiMaterial *ImportMaterial(std::vector<int> &embeddedTexIdxs, Asset &r, M
         // glTFv2 is either PBR or Unlit
         aiShadingMode shadingMode = aiShadingMode_PBR_BRDF;
         if (mat.unlit) {
-            aimat->AddProperty(&mat.unlit, 1, "$mat.gltf.unlit", 0, 0); // TODO: Remove this property, it is kept for backwards compatibility with assimp 5.0.1
             shadingMode = aiShadingMode_Unlit;
         }
 
@@ -1602,7 +1604,7 @@ void glTF2Importer::InternReadFile(const std::string &pFile, aiScene *pScene, IO
     this->mScene = pScene;
 
     // read the asset file
-  	glTF2::Asset asset(pIOHandler, static_cast<rapidjson::IRemoteSchemaDocumentProvider*>(mSchemaDocumentProvider));
+    glTF2::Asset asset(pIOHandler);
     asset.Load(pFile, GetExtension(pFile) == "glb");
     if (asset.scene) {
         pScene->mName = asset.scene->name;
@@ -1626,10 +1628,6 @@ void glTF2Importer::InternReadFile(const std::string &pFile, aiScene *pScene, IO
     if (pScene->mNumMeshes == 0) {
         pScene->mFlags |= AI_SCENE_FLAGS_INCOMPLETE;
     }
-}
-
-void glTF2Importer::SetupProperties(const Importer *pImp) {
-    mSchemaDocumentProvider = static_cast<rapidjson::IRemoteSchemaDocumentProvider*>(pImp->GetPropertyPointer(AI_CONFIG_IMPORT_SCHEMA_DOCUMENT_PROVIDER));
 }
 
 #endif // ASSIMP_BUILD_NO_GLTF_IMPORTER

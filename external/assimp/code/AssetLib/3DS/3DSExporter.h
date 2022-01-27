@@ -73,7 +73,7 @@ public:
 private:
     void WriteMeshes();
     void WriteMaterials();
-    bool WriteTexture(const aiMaterial& mat, aiTextureType type, uint16_t chunk_flags);
+    void WriteTexture(const aiMaterial& mat, aiTextureType type, uint16_t chunk_flags);
     void WriteFaceMaterialChunk(const aiMesh& mesh);
     int WriteHierarchy(const aiNode& node, int level, int sibling_level);
     void WriteString(const std::string& s);

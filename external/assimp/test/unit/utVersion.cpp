@@ -44,16 +44,16 @@ class utVersion : public ::testing::Test {
 };
 
 TEST_F( utVersion, aiGetLegalStringTest ) {
-    const char *lv = aiGetLegalString();
+    const char *lv( aiGetLegalString() );
     EXPECT_NE( lv, nullptr );
     std::string text( lv );
 
-    size_t pos = text.find(std::string("2021"));
+    size_t pos( text.find( std::string( "2021" ) ) );
     EXPECT_NE( pos, std::string::npos );
 }
 
 TEST_F( utVersion, aiGetVersionMinorTest ) {
-    EXPECT_EQ( aiGetVersionMinor(), 1U );
+    EXPECT_EQ( aiGetVersionMinor(), 0U );
 }
 
 TEST_F( utVersion, aiGetVersionMajorTest ) {

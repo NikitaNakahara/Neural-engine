@@ -75,13 +75,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
-// Uncomment to use C++20 std::format instead of fmt. This removes compile
-// time checking of format strings, but doesn't depend on the fmt library.
-//
-// #define SPDLOG_USE_STD_FORMAT
-///////////////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////////////
 // Uncomment to enable wchar_t support (convert to utf8)
 //
 // #define SPDLOG_WCHAR_TO_UTF8_SUPPORT
@@ -127,9 +120,5 @@
 // __PRETTY_FUNCTION__ might be nicer in clang/gcc, and __FUNCTION__ in msvc.
 // Defaults to __FUNCTION__ (should work on all compilers) if not defined.
 //
-// #ifdef __PRETTY_FUNCTION__
-// # define SPDLOG_FUNCTION __PRETTY_FUNCTION__
-// #else
-// # define SPDLOG_FUNCTION __FUNCTION__
-// #endif
+// #define SPDLOG_FUNCTION __PRETTY_FUNCTION__
 ///////////////////////////////////////////////////////////////////////////////

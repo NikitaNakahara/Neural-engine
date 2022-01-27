@@ -473,22 +473,16 @@ void HMPImporter::ReadFirstSkin(unsigned int iNumSkins, const unsigned char *szC
 
 // ------------------------------------------------------------------------------------------------
 // Generate proepr texture coords
-void HMPImporter::GenerateTextureCoords(const unsigned int width, const unsigned int height) {
+void HMPImporter::GenerateTextureCoords(
+        const unsigned int width, const unsigned int height) {
     ai_assert(nullptr != pScene->mMeshes);
     ai_assert(nullptr != pScene->mMeshes[0]);
     ai_assert(nullptr != pScene->mMeshes[0]->mTextureCoords[0]);
 
     aiVector3D *uv = pScene->mMeshes[0]->mTextureCoords[0];
-    if (uv == nullptr) {
-        return;
-    }
-    
-    if (height == 0.0f || width == 0.0) {
-        return;
-    }
-    
-    const float fY = (1.0f / height) + (1.0f / height) / height;
-    const float fX = (1.0f / width) + (1.0f / width) / width;
+
+    const float fY = (1.0f / height) + (1.0f / height) / (height - 1);
+    const float fX = (1.0f / width) + (1.0f / width) / (width - 1);
 
     for (unsigned int y = 0; y < height; ++y) {
         for (unsigned int x = 0; x < width; ++x, ++uv) {

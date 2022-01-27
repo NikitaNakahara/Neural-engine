@@ -62,12 +62,6 @@ template <> void Structure :: Convert<Group> (
     ) const
 ;
 
-template <> void Structure::Convert<Collection>(
-    Collection& dest,
-    const FileDatabase& db
-    ) const
-;
-
 template <> void Structure :: Convert<MTex> (
     MTex& dest,
     const FileDatabase& db

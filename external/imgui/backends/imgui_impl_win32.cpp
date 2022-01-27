@@ -172,9 +172,8 @@ bool    ImGui_ImplWin32_Init(void* hwnd)
 
 void    ImGui_ImplWin32_Shutdown()
 {
-    ImGui_ImplWin32_Data* bd = ImGui_ImplWin32_GetBackendData();
-    IM_ASSERT(bd != NULL && "No platform backend to shutdown, or already shutdown?");
     ImGuiIO& io = ImGui::GetIO();
+    ImGui_ImplWin32_Data* bd = ImGui_ImplWin32_GetBackendData();
 
     // Unload XInput library
 #ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD

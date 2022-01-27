@@ -40,9 +40,6 @@ SET(CMAKE_POLICY_DEFAULT_CMP0092 NEW)
 
 CMAKE_MINIMUM_REQUIRED( VERSION 3.10 )
 
-# Disabled importers: m3d for 5.1
-ADD_DEFINITIONS( -DASSIMP_BUILD_NO_M3D_IMPORTER)
-ADD_DEFINITIONS( -DASSIMP_BUILD_NO_M3D_EXPORTER)
 # Toggles the use of the hunter package manager
 option(ASSIMP_HUNTER_ENABLED "Enable Hunter package manager support" OFF)
 
@@ -56,7 +53,7 @@ IF(ASSIMP_HUNTER_ENABLED)
   add_definitions(-DASSIMP_USE_HUNTER)
 ENDIF()
 
-PROJECT(Assimp VERSION 5.1.3)
+PROJECT( Assimp VERSION 5.0.1 )
 
 # All supported options ###############################################
 
@@ -288,11 +285,12 @@ ELSEIF( CMAKE_COMPILER_IS_MINGW )
     message(WARNING "MinGW is old, if you experience errors, update MinGW.")
   ENDIF()
   IF(NOT ASSIMP_HUNTER_ENABLED)
-    SET(CMAKE_CXX_FLAGS "-std=gnu++11 ${CMAKE_CXX_FLAGS}")
+    SET(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
     SET(CMAKE_C_FLAGS "-fPIC ${CMAKE_C_FLAGS}")
   ENDIF()
   SET(CMAKE_CXX_FLAGS "-fvisibility=hidden -fno-strict-aliasing -Wall -Wno-long-long -Wa,-mbig-obj -O3 ${CMAKE_CXX_FLAGS}")
   SET(CMAKE_C_FLAGS "-fno-strict-aliasing ${CMAKE_C_FLAGS}")
+  ADD_DEFINITIONS( -U__STRICT_ANSI__ )
 ENDIF()
 
 IF ( IOS AND NOT ASSIMP_HUNTER_ENABLED)

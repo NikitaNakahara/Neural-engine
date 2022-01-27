@@ -79,7 +79,7 @@ using namespace Util;
 
 #define MAGIC_NODE_TAG "_$AssimpFbx$"
 
-#define CONVERT_FBX_TIME(time) static_cast<double>(time) / 46186158000LL
+#define CONVERT_FBX_TIME(time) (static_cast<double>(time) * 1000.0 / 46186158000LL)
 
 FBXConverter::FBXConverter(aiScene *out, const Document &doc, bool removeEmptyBones) :
         defaultMaterialIndex(),
@@ -1128,7 +1128,7 @@ unsigned int FBXConverter::ConvertMeshSingleMaterial(const MeshGeometry &mesh, c
             *out_uv++ = aiVector3D(v.x, v.y, 0.0f);
         }
 
-        out_mesh->SetTextureCoordsName(i, aiString(mesh.GetTextureCoordChannelName(i)));
+        out_mesh->mTextureCoordsNames[i] = mesh.GetTextureCoordChannelName(i);
 
         out_mesh->mNumUVComponents[i] = 2;
     }
@@ -2618,7 +2618,7 @@ void FBXConverter::ConvertAnimationStack(const AnimationStack &st) {
                     meshMorphAnim->mKeys[j].mNumValuesAndWeights = numValuesAndWeights;
                     meshMorphAnim->mKeys[j].mValues = new unsigned int[numValuesAndWeights];
                     meshMorphAnim->mKeys[j].mWeights = new double[numValuesAndWeights];
-                    meshMorphAnim->mKeys[j].mTime = CONVERT_FBX_TIME(animIt.first) * anim_fps;
+                    meshMorphAnim->mKeys[j].mTime = CONVERT_FBX_TIME(animIt.first);
                     for (unsigned int k = 0; k < numValuesAndWeights; k++) {
                         meshMorphAnim->mKeys[j].mValues[k] = keyData->values.at(k);
                         meshMorphAnim->mKeys[j].mWeights[k] = keyData->weights.at(k);
@@ -2636,8 +2636,8 @@ void FBXConverter::ConvertAnimationStack(const AnimationStack &st) {
         return;
     }
 
-    double start_time_fps = has_local_startstop ? (CONVERT_FBX_TIME(start_time) * anim_fps) : min_time;
-    double stop_time_fps = has_local_startstop ? (CONVERT_FBX_TIME(stop_time) * anim_fps) : max_time;
+    double start_time_fps = has_local_startstop ? CONVERT_FBX_TIME(start_time) : min_time;
+    double stop_time_fps = has_local_startstop ? CONVERT_FBX_TIME(stop_time) : max_time;
 
     // adjust relative timing for animation
     for (unsigned int c = 0; c < anim->mNumChannels; c++) {
@@ -3127,12 +3127,7 @@ aiNodeAnim* FBXConverter::GenerateSimpleNodeAnim(const std::string& name,
         if (chain[i] == iterEnd)
             continue;
 
-        if (i == TransformationComp_Rotation || i == TransformationComp_PreRotation
-                || i == TransformationComp_PostRotation || i == TransformationComp_GeometricRotation) {
-            keyframeLists[i] = GetRotationKeyframeList((*chain[i]).second, start, stop);
-        } else {
-            keyframeLists[i] = GetKeyframeList((*chain[i]).second, start, stop);
-        }
+        keyframeLists[i] = GetKeyframeList((*chain[i]).second, start, stop);
 
         for (KeyFrameListList::const_iterator it = keyframeLists[i].begin(); it != keyframeLists[i].end(); ++it) {
             const KeyTimeList& times = *std::get<0>(*it);
@@ -3162,7 +3157,7 @@ aiNodeAnim* FBXConverter::GenerateSimpleNodeAnim(const std::string& name,
         InterpolateKeys(outTranslations, keytimes, keyframeLists[TransformationComp_Translation], defTranslate, maxTime, minTime);
     } else {
         for (size_t i = 0; i < keyCount; ++i) {
-            outTranslations[i].mTime = CONVERT_FBX_TIME(keytimes[i]) * anim_fps;
+            outTranslations[i].mTime = CONVERT_FBX_TIME(keytimes[i]);
             outTranslations[i].mValue = defTranslate;
         }
     }
@@ -3171,7 +3166,7 @@ aiNodeAnim* FBXConverter::GenerateSimpleNodeAnim(const std::string& name,
         InterpolateKeys(outRotations, keytimes, keyframeLists[TransformationComp_Rotation], defRotation, maxTime, minTime, rotOrder);
     } else {
         for (size_t i = 0; i < keyCount; ++i) {
-            outRotations[i].mTime = CONVERT_FBX_TIME(keytimes[i]) * anim_fps;
+            outRotations[i].mTime = CONVERT_FBX_TIME(keytimes[i]);
             outRotations[i].mValue = defQuat;
         }
     }
@@ -3180,7 +3175,7 @@ aiNodeAnim* FBXConverter::GenerateSimpleNodeAnim(const std::string& name,
         InterpolateKeys(outScales, keytimes, keyframeLists[TransformationComp_Scaling], defScale, maxTime, minTime);
     } else {
         for (size_t i = 0; i < keyCount; ++i) {
-            outScales[i].mTime = CONVERT_FBX_TIME(keytimes[i]) * anim_fps;
+            outScales[i].mTime = CONVERT_FBX_TIME(keytimes[i]);
             outScales[i].mValue = defScale;
         }
     }
@@ -3279,79 +3274,6 @@ FBXConverter::KeyFrameListList FBXConverter::GetKeyframeList(const std::vector<c
     return inputs; // pray for NRVO :-)
 }
 
-FBXConverter::KeyFrameListList FBXConverter::GetRotationKeyframeList(const std::vector<const AnimationCurveNode *> &nodes,
-                                                                     int64_t start, int64_t stop) {
-    KeyFrameListList inputs;
-    inputs.reserve(nodes.size() * 3);
-
-    //give some breathing room for rounding errors
-    const int64_t adj_start = start - 10000;
-    const int64_t adj_stop = stop + 10000;
-
-    for (const AnimationCurveNode *node : nodes) {
-        ai_assert(node);
-
-        const AnimationCurveMap &curves = node->Curves();
-        for (const AnimationCurveMap::value_type &kv : curves) {
-
-            unsigned int mapto;
-            if (kv.first == "d|X") {
-                mapto = 0;
-            } else if (kv.first == "d|Y") {
-                mapto = 1;
-            } else if (kv.first == "d|Z") {
-                mapto = 2;
-            } else {
-                FBXImporter::LogWarn("ignoring scale animation curve, did not recognize target component");
-                continue;
-            }
-
-            const AnimationCurve *const curve = kv.second;
-            ai_assert(curve->GetKeys().size() == curve->GetValues().size());
-            ai_assert(curve->GetKeys().size());
-
-            //get values within the start/stop time window
-            std::shared_ptr<KeyTimeList> Keys(new KeyTimeList());
-            std::shared_ptr<KeyValueList> Values(new KeyValueList());
-            const size_t count = curve->GetKeys().size();
-
-            int64_t tp = curve->GetKeys().at(0);
-            float vp = curve->GetValues().at(0);
-            Keys->push_back(tp);
-            Values->push_back(vp);
-            if (count > 1) {
-                int64_t tc = curve->GetKeys().at(1);
-                float vc = curve->GetValues().at(1);
-                for (size_t n = 1; n < count; n++) {
-                    while (std::abs(vc - vp) >= 180.0f) {
-                        float step = std::floor(float(tc - tp) / (vc - vp) * 179.0f);
-                        int64_t tnew = tp + int64_t(step);
-                        float vnew = vp + (vc - vp) * step / float(tc - tp);
-                        if (tnew >= adj_start && tnew <= adj_stop) {
-                            Keys->push_back(tnew);
-                            Values->push_back(vnew);
-                        }
-                        tp = tnew;
-                        vp = vnew;
-                    }
-                    if (tc >= adj_start && tc <= adj_stop) {
-                        Keys->push_back(tc);
-                        Values->push_back(vc);
-                    }
-                    if (n + 1 < count) {
-                        tp = tc;
-                        vp = vc;
-                        tc = curve->GetKeys().at(n + 1);
-                        vc = curve->GetValues().at(n + 1);
-                    }
-                }
-            }
-            inputs.push_back(std::make_tuple(Keys, Values, mapto));
-        }
-    }
-    return inputs;
-}
-
 KeyTimeList FBXConverter::GetKeyTimeList(const KeyFrameListList &inputs) {
     ai_assert(!inputs.empty());
 
@@ -3442,7 +3364,7 @@ void FBXConverter::InterpolateKeys(aiVectorKey *valOut, const KeyTimeList &keys,
         }
 
         // magic value to convert fbx times to seconds
-        valOut->mTime = CONVERT_FBX_TIME(time) * anim_fps;
+        valOut->mTime = CONVERT_FBX_TIME(time);
 
         min_time = std::min(min_time, valOut->mTime);
         max_time = std::max(max_time, valOut->mTime);
@@ -3542,7 +3464,7 @@ void FBXConverter::ConvertRotationKeys(aiNodeAnim *na, const std::vector<const A
     ai_assert(nodes.size());
 
     // XXX see notes in ConvertScaleKeys()
-    const std::vector<KeyFrameList> &inputs = GetRotationKeyframeList(nodes, start, stop);
+    const std::vector<KeyFrameList> &inputs = GetKeyframeList(nodes, start, stop);
     const KeyTimeList &keys = GetKeyTimeList(inputs);
 
     na->mNumRotationKeys = static_cast<unsigned int>(keys.size());

@@ -358,14 +358,7 @@ GLFWAPI id glfwGetNSGLContext(GLFWwindow* handle)
     _GLFWwindow* window = (_GLFWwindow*) handle;
     _GLFW_REQUIRE_INIT_OR_RETURN(nil);
 
-    if (_glfw.platform.platformID != GLFW_PLATFORM_COCOA)
-    {
-        _glfwInputError(GLFW_PLATFORM_UNAVAILABLE,
-                        "NSGL: Platform not initialized");
-        return nil;
-    }
-
-    if (window->context.source != GLFW_NATIVE_CONTEXT_API)
+    if (window->context.client == GLFW_NO_API)
     {
         _glfwInputError(GLFW_NO_WINDOW_CONTEXT, NULL);
         return nil;

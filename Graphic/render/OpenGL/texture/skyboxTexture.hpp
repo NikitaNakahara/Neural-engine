@@ -18,7 +18,7 @@ namespace Graphic
 		~Skybox();
 
 		GLuint initSkybox(std::vector<std::string> faces);
-		void drawSkybox(glm::mat4 view, glm::mat4 projection);
+		void drawSkybox(glm::mat4 view, glm::mat4 projection, std::string path);
 
 		GLuint texture;
 

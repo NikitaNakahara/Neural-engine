@@ -366,7 +366,9 @@ void GetImporterInstanceList(std::vector<BaseImporter *> &out) {
     out.push_back(new D3MFImporter());
 #endif
 #ifndef ASSIMP_BUILD_NO_X3D_IMPORTER
-    out.push_back(new X3DImporter());
+    if (devImportersEnabled) { // https://github.com/assimp/assimp/issues/3647
+        out.push_back(new X3DImporter());
+    }
 #endif
 #ifndef ASSIMP_BUILD_NO_MMD_IMPORTER
     out.push_back(new MMDImporter());

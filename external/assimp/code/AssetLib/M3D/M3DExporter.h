@@ -46,10 +46,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef AI_M3DEXPORTER_H_INC
 #define AI_M3DEXPORTER_H_INC
 
-#ifndef ASSIMP_BUILD_NO_M3D_IMPORTER
 #ifndef ASSIMP_BUILD_NO_M3D_EXPORTER
 
 #include <assimp/types.h>
+//#include <assimp/material.h>
 #include <assimp/StreamWriter.h> // StreamWriterLE
 #include <assimp/Exceptional.h> // DeadlyExportError
 
@@ -60,7 +60,8 @@ struct aiNode;
 struct aiMaterial;
 struct aiFace;
 
-namespace Assimp {
+namespace Assimp
+{
     class IOSystem;
     class IOStream;
     class ExportProperties;
@@ -70,7 +71,8 @@ namespace Assimp {
     // ---------------------------------------------------------------------
     /** Helper class to export a given scene to an M3D file. */
     // ---------------------------------------------------------------------
-    class M3DExporter {
+    class M3DExporter
+    {
     public:
         /// Constructor for a specific scene to export
         M3DExporter(const aiScene* pScene, const ExportProperties* pProperties);
@@ -87,7 +89,6 @@ namespace Assimp {
     };
 }
 
-#endif // #ifndef ASSIMP_BUILD_NO_M3D_IMPORTER
 #endif // ASSIMP_BUILD_NO_M3D_EXPORTER
 
 #endif // AI_M3DEXPORTER_H_INC

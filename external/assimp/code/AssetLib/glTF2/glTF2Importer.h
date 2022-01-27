@@ -65,7 +65,6 @@ public:
 protected:
     const aiImporterDesc *GetInfo() const override;
     void InternReadFile(const std::string &pFile, aiScene *pScene, IOSystem *pIOHandler) override;
-    virtual void SetupProperties(const Importer *pImp) override;
 
 private:
     void ImportEmbeddedTextures(glTF2::Asset &a);
@@ -81,9 +80,6 @@ private:
     std::vector<unsigned int> meshOffsets;
     std::vector<int> embeddedTexIdxs;
     aiScene *mScene;
-
-    /// An instance of rapidjson::IRemoteSchemaDocumentProvider
-    void *mSchemaDocumentProvider = nullptr;
 };
 
 } // namespace Assimp

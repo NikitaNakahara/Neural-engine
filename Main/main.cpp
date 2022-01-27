@@ -3,6 +3,6 @@
 int main()
 {
 	Graphic::Application myApp = Graphic::Application();
-	int returnCode = myApp.start(1024, 768);
+	int returnCode = myApp.start(1920, 1080);
 	return returnCode;
 }

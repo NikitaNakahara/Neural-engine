@@ -924,8 +924,6 @@ void ColladaParser::ReadMaterial(XmlNode &node, Collada::Material &pMaterial) {
 void ColladaParser::ReadLight(XmlNode &node, Collada::Light &pLight) {
     XmlNodeIterator xmlIt(node, XmlNodeIterator::PreOrderMode);
     XmlNode currentNode;
-    // TODO: Check the current technique and skip over unsupported extra techniques
-
     while (xmlIt.getNext(currentNode)) {
         const std::string &currentName = currentNode.name();
         if (currentName == "spot") {
@@ -951,34 +949,33 @@ void ColladaParser::ReadLight(XmlNode &node, Collada::Light &pLight) {
             content = fast_atoreal_move<ai_real>(content, (ai_real &)pLight.mColor.b);
             SkipSpacesAndLineEnd(&content);
         } else if (currentName == "constant_attenuation") {
-            XmlParser::getValueAsFloat(currentNode, pLight.mAttConstant);
+            XmlParser::getRealAttribute(currentNode, "constant_attenuation", pLight.mAttConstant);
         } else if (currentName == "linear_attenuation") {
-            XmlParser::getValueAsFloat(currentNode, pLight.mAttLinear);
+            XmlParser::getRealAttribute(currentNode, "linear_attenuation", pLight.mAttLinear);
         } else if (currentName == "quadratic_attenuation") {
-            XmlParser::getValueAsFloat(currentNode, pLight.mAttQuadratic);
+            XmlParser::getRealAttribute(currentNode, "quadratic_attenuation", pLight.mAttQuadratic);
         } else if (currentName == "falloff_angle") {
-            XmlParser::getValueAsFloat(currentNode, pLight.mFalloffAngle);
+            XmlParser::getRealAttribute(currentNode, "falloff_angle", pLight.mFalloffAngle);
         } else if (currentName == "falloff_exponent") {
-            XmlParser::getValueAsFloat(currentNode, pLight.mFalloffExponent);
+            XmlParser::getRealAttribute(currentNode, "falloff_exponent", pLight.mFalloffExponent);
         }
         // FCOLLADA extensions
         // -------------------------------------------------------
         else if (currentName == "outer_cone") {
-            XmlParser::getValueAsFloat(currentNode, pLight.mOuterAngle);
-        } else if (currentName == "penumbra_angle") { // this one is deprecated, now calculated using outer_cone
-            XmlParser::getValueAsFloat(currentNode, pLight.mPenumbraAngle);
+            XmlParser::getRealAttribute(currentNode, "outer_cone", pLight.mOuterAngle);
+        } else if (currentName == "penumbra_angle") { // ... and this one is even deprecated
+            XmlParser::getRealAttribute(currentNode, "penumbra_angle", pLight.mPenumbraAngle);
         } else if (currentName == "intensity") {
-            XmlParser::getValueAsFloat(currentNode, pLight.mIntensity);
-        }
-        else if (currentName == "falloff") {
-            XmlParser::getValueAsFloat(currentNode, pLight.mOuterAngle);
+            XmlParser::getRealAttribute(currentNode, "intensity", pLight.mIntensity);
+        } else if (currentName == "falloff") {
+            XmlParser::getRealAttribute(currentNode, "falloff", pLight.mOuterAngle);
         } else if (currentName == "hotspot_beam") {
-            XmlParser::getValueAsFloat(currentNode, pLight.mFalloffAngle);
+            XmlParser::getRealAttribute(currentNode, "hotspot_beam", pLight.mFalloffAngle);
         }
         // OpenCOLLADA extensions
         // -------------------------------------------------------
         else if (currentName == "decay_falloff") {
-            XmlParser::getValueAsFloat(currentNode, pLight.mOuterAngle);
+            XmlParser::getRealAttribute(currentNode, "decay_falloff", pLight.mOuterAngle);
         }
     }
 }
@@ -1112,7 +1109,7 @@ void ColladaParser::ReadEffectProfileCommon(XmlNode &node, Collada::Effect &pEff
         // GOOGLEEARTH/OKINO extensions
         // -------------------------------------------------------
         else if (currentName == "double_sided")
-            XmlParser::getValueAsBool(currentNode, pEffect.mDoubleSided);
+            XmlParser::getBoolAttribute(currentNode, currentName.c_str(), pEffect.mDoubleSided);
 
         // FCOLLADA extensions
         // -------------------------------------------------------
@@ -1124,9 +1121,9 @@ void ColladaParser::ReadEffectProfileCommon(XmlNode &node, Collada::Effect &pEff
         // MAX3D extensions
         // -------------------------------------------------------
         else if (currentName == "wireframe") {
-            XmlParser::getValueAsBool(currentNode, pEffect.mWireframe);
+            XmlParser::getBoolAttribute(currentNode, currentName.c_str(), pEffect.mWireframe);
         } else if (currentName == "faceted") {
-            XmlParser::getValueAsBool(currentNode, pEffect.mFaceted);
+            XmlParser::getBoolAttribute(currentNode, currentName.c_str(), pEffect.mFaceted);
         }
     }
 }
@@ -1145,23 +1142,23 @@ void ColladaParser::ReadSamplerProperties(XmlNode &node, Sampler &out) {
         // MAYA extensions
         // -------------------------------------------------------
         if (currentName == "wrapU") {
-            XmlParser::getValueAsBool(currentNode, out.mWrapU);
+            XmlParser::getBoolAttribute(currentNode, currentName.c_str(), out.mWrapU);
         } else if (currentName == "wrapV") {
-            XmlParser::getValueAsBool(currentNode, out.mWrapV);
+            XmlParser::getBoolAttribute(currentNode, currentName.c_str(), out.mWrapV);
         } else if (currentName == "mirrorU") {
-            XmlParser::getValueAsBool(currentNode, out.mMirrorU);
+            XmlParser::getBoolAttribute(currentNode, currentName.c_str(), out.mMirrorU);
         } else if (currentName == "mirrorV") {
-            XmlParser::getValueAsBool(currentNode, out.mMirrorV);
+            XmlParser::getBoolAttribute(currentNode, currentName.c_str(), out.mMirrorV);
         } else if (currentName == "repeatU") {
-            XmlParser::getValueAsFloat(currentNode, out.mTransform.mScaling.x);
+            XmlParser::getRealAttribute(currentNode, currentName.c_str(), out.mTransform.mScaling.x);
         } else if (currentName == "repeatV") {
-            XmlParser::getValueAsFloat(currentNode, out.mTransform.mScaling.y);
+            XmlParser::getRealAttribute(currentNode, currentName.c_str(), out.mTransform.mScaling.y);
         } else if (currentName == "offsetU") {
-            XmlParser::getValueAsFloat(currentNode, out.mTransform.mTranslation.x);
+            XmlParser::getRealAttribute(currentNode, currentName.c_str(), out.mTransform.mTranslation.x);
         } else if (currentName == "offsetV") {
-            XmlParser::getValueAsFloat(currentNode, out.mTransform.mTranslation.y);
+            XmlParser::getRealAttribute(currentNode, currentName.c_str(), out.mTransform.mTranslation.y);
         } else if (currentName == "rotateUV") {
-            XmlParser::getValueAsFloat(currentNode, out.mTransform.mRotation);
+            XmlParser::getRealAttribute(currentNode, currentName.c_str(), out.mTransform.mRotation);
         } else if (currentName == "blend_mode") {
             std::string v;
             XmlParser::getValueAsString(currentNode, v);
@@ -1181,14 +1178,14 @@ void ColladaParser::ReadSamplerProperties(XmlNode &node, Sampler &out) {
         // OKINO extensions
         // -------------------------------------------------------
         else if (currentName == "weighting") {
-            XmlParser::getValueAsFloat(currentNode, out.mWeighting);
+            XmlParser::getRealAttribute(currentNode, currentName.c_str(), out.mWeighting);
         } else if (currentName == "mix_with_previous_layer") {
-            XmlParser::getValueAsFloat(currentNode, out.mMixWithPrevious);
+            XmlParser::getRealAttribute(currentNode, currentName.c_str(), out.mMixWithPrevious);
         }
         // MAX3D extensions
         // -------------------------------------------------------
         else if (currentName == "amount") {
-            XmlParser::getValueAsFloat(currentNode, out.mWeighting);
+            XmlParser::getRealAttribute(currentNode, currentName.c_str(), out.mWeighting);
         }
     }
 }
@@ -2207,7 +2204,7 @@ void ColladaParser::ReadMaterialVertexInputBinding(XmlNode &node, Collada::Seman
 
 void ColladaParser::ReadEmbeddedTextures(ZipArchiveIOSystem &zip_archive) {
     // Attempt to load any undefined Collada::Image in ImageLibrary
-    for (auto &it : mImageLibrary) {
+    for (auto & it : mImageLibrary) {
         Collada::Image &image = it.second;
 
         if (image.mImageData.empty()) {

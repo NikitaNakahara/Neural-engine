@@ -119,7 +119,7 @@
         return event;
     }];
 
-    ImGui_ImplOSX_Init(self.view);
+    ImGui_ImplOSX_Init();
 
 #endif
 }

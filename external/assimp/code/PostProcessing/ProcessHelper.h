@@ -133,12 +133,12 @@ inline ::aiQuatKey max(const ::aiQuatKey &a, const ::aiQuatKey &b) {
 
 // std::min for aiVertexWeight
 inline ::aiVertexWeight min(const ::aiVertexWeight &a, const ::aiVertexWeight &b) {
-    return ::aiVertexWeight(min(a.mVertexId, b.mVertexId),static_cast<ai_real>(min(a.mWeight, b.mWeight)));
+    return ::aiVertexWeight(min(a.mVertexId, b.mVertexId), min(a.mWeight, b.mWeight));
 }
 
 // std::max for aiVertexWeight
 inline ::aiVertexWeight max(const ::aiVertexWeight &a, const ::aiVertexWeight &b) {
-    return ::aiVertexWeight(max(a.mVertexId, b.mVertexId), static_cast<ai_real>(max(a.mWeight, b.mWeight)));
+    return ::aiVertexWeight(max(a.mVertexId, b.mVertexId), max(a.mWeight, b.mWeight));
 }
 
 } // end namespace std
@@ -244,7 +244,7 @@ inline void ArrayBounds(const T *in, unsigned int size, T &min, T &max) {
 
 // -------------------------------------------------------------------------------
 /** Little helper function to calculate the quadratic difference
- * of two colors.
+ * of two colours.
  * @param pColor1 First color
  * @param pColor2 second color
  * @return Quadratic color difference */
@@ -313,8 +313,8 @@ ai_real ComputePositionEpsilon(const aiMesh *const *pMeshes, size_t num);
 unsigned int GetMeshVFormatUnique(const aiMesh *pcMesh);
 
 // defs for ComputeVertexBoneWeightTable()
-using PerVertexWeight = std::pair<unsigned int, float>;
-using VertexWeightTable = std::vector<PerVertexWeight>;
+typedef std::pair<unsigned int, float> PerVertexWeight;
+typedef std::vector<PerVertexWeight> VertexWeightTable;
 
 // -------------------------------------------------------------------------------
 // Compute a per-vertex bone weight table
@@ -332,7 +332,7 @@ const char *MappingTypeToString(aiTextureMapping in);
 aiMesh *MakeSubmesh(const aiMesh *superMesh, const std::vector<unsigned int> &subMeshFaces, unsigned int subFlags);
 
 // -------------------------------------------------------------------------------
-// Utility post-process step to share the spatial sort tree between
+// Utility postprocess step to share the spatial sort tree between
 // all steps which use it to speedup its computations.
 class ComputeSpatialSortProcess : public BaseProcess {
     bool IsActive(unsigned int pFlags) const {
@@ -372,5 +372,4 @@ class DestroySpatialSortProcess : public BaseProcess {
 };
 
 } // namespace Assimp
-
 #endif // !! AI_PROCESS_HELPER_H_INCLUDED

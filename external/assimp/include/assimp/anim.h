@@ -98,7 +98,6 @@ struct aiVectorKey {
     bool operator<(const aiVectorKey &rhs) const {
         return mTime < rhs.mTime;
     }
-    
     bool operator>(const aiVectorKey &rhs) const {
         return mTime > rhs.mTime;
     }
@@ -132,7 +131,6 @@ struct aiQuatKey {
     bool operator==(const aiQuatKey &rhs) const {
         return rhs.mValue == this->mValue;
     }
-    
     bool operator!=(const aiQuatKey &rhs) const {
         return rhs.mValue != this->mValue;
     }
@@ -141,7 +139,6 @@ struct aiQuatKey {
     bool operator<(const aiQuatKey &rhs) const {
         return mTime < rhs.mTime;
     }
-    
     bool operator>(const aiQuatKey &rhs) const {
         return mTime > rhs.mTime;
     }
