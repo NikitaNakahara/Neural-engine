@@ -71,16 +71,12 @@ namespace Graphic
 			model = glm::mat4(1.0f);
 
 			view = camera.getView();
-			glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glEnable(GL_DEPTH_TEST);
 
 			skybox.drawSkybox(view, projection);
 
-			glDepthFunc(GL_LESS);
-
 			glUseProgram(objectShaderProgram);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.texture);
 			object_shader_program.setMat4("view", view);
 			object_shader_program.setMat4("projection", projection);
 			object_shader_program.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
@@ -89,16 +85,7 @@ namespace Graphic
 			object_shader_program.setMat4("model", model);
 			models[0].Draw(object_shader_program);
 
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-			glClear(GL_COLOR_BUFFER_BIT);
-
-			FBOrender.useFramebuffer();
-			glBindVertexArray(quadVAO);
-			glDisable(GL_DEPTH_TEST);
-			FBOrender.useTexture();
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-
+			/*
 			ImGuiIO& io = ImGui::GetIO();
 			io.DisplaySize.x = static_cast<float>(width);
 			io.DisplaySize.y = static_cast<float>(height);
@@ -112,6 +99,7 @@ namespace Graphic
 
 			glfwPollEvents();
 			glfwSwapBuffers(m_pWindow);
+			*/
 		}
 	}
 
@@ -123,8 +111,8 @@ namespace Graphic
 			return -1;
 		}
 
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 1);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 		GLFWwindow* m_pWindow = glfwCreateWindow(width, height, "Test", nullptr, nullptr);
@@ -158,13 +146,8 @@ namespace Graphic
 		Model models[] = { backpack };
 
 
-
 		MTexture texture1("..\\..\\res\\textures\\texture.png", GL_TEXTURE_2D, GL_RGBA);
 		GLuint textures[] = { texture1.getTexture() };
-
-		FBOrender.framebufferInit(width, height);
-		FBO = FBOrender.getFBO();
-		quadVAO = FBOrender.getVAO();
 
 		on_update(m_pWindow, shaders, models, textures, width, height);
 
