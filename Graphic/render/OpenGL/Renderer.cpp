@@ -9,6 +9,8 @@
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 
+#include <Windows.h>
+
 #include <fstream>
 #include <iostream>
 #include <tuple>
@@ -21,7 +23,6 @@
 #include "../../Log.hpp"
 #include "shader/ShaderProgram.hpp"
 #include "models/ModelLoader.hpp"
-#include "Framebuffer.hpp"
 #include "texture/skyboxTexture.hpp"
 
 
@@ -30,7 +31,6 @@ namespace Graphic
 	void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 	void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 	Camera camera = Camera();
-	Framebuffer FBOrender = Framebuffer();
 
 	Renderer::Renderer()
 	{
@@ -43,30 +43,33 @@ namespace Graphic
 	
 	void Renderer::initModels()
 	{
-		Model mCone = Model("../../res/models/cone/cone.obj");
+		Model mCone = fileLoader.getModel("cone.obj");
 		SModel cone = { "cone", mCone };
-		Model mCube = Model("../../res/models/cube/cube.obj");
+		cone.shader = shaders[0];
+		Model mCube = fileLoader.getModel("cube.obj");
 		SModel cube = { "cube", mCube };
-		Model mCylinder = Model("../../res/models/cylinder/cylinder.obj");
+		cube.shader = shaders[0];
+		Model mCylinder = fileLoader.getModel("cylinder.obj");
 		SModel cylinder = { "cylinder", mCylinder };
-		Model mSphere = Model("../../res/models/sphere/sphere.obj");
+		cylinder.shader = shaders[0];
+		Model mSphere = fileLoader.getModel("sphere.obj");
 		SModel sphere = { "sphere", mSphere };
-		Model mTorus = Model("../../res/models/torus/torus.obj");
+		sphere.shader = shaders[0];
+		Model mTorus = fileLoader.getModel("torus.obj");
 		SModel torus = { "torus", mTorus };
+		torus.shader = shaders[0];
 
 		simpleModels = { cone, cube, cylinder, sphere, torus };
 	}
 
-	void Renderer::on_update(GLFWwindow* m_pWindow, ShaderProgram shaders[], std::vector<SModel> models, std::vector<SSkybox> skyboxes, GLuint textures[], int width, int height)
+	void Renderer::on_update(GLFWwindow* m_pWindow, std::vector<SModel> models, std::vector<SSkybox> skyboxes, int width, int height)
 	{
 		glm::vec3 windows[] = {
 			glm::vec3(0.f, 0.f, 3.f),
 			glm::vec3(0.5f, 0.5f, 2.f)
 		};
 
-		ShaderProgram object_shader_program = shaders[0];
-		GLint objectShaderProgram = object_shader_program.getShaderProgram();
-		Model mHeart = Model("../../res/models/heart/heart.obj");
+		Model mHeart = fileLoader.getModel("heart.obj");
 		SModel heart = { "heart", mHeart };
 
 		bool cursorVisible = false;
@@ -74,8 +77,6 @@ namespace Graphic
 		bool firstFrame = true;
 		bool love = false;
 		glfwSetInputMode(m_pWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		LOG_INFO("Program was started");
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glEnable(GL_MULTISAMPLE);
 
 		while (!glfwWindowShouldClose(m_pWindow))
@@ -110,22 +111,12 @@ namespace Graphic
 			for (int i = 0; i < skyboxes.size(); i++)
 			{
 				if (skyboxes[i].draw)
-					skyboxes[i].skybox.drawSkybox(view, projection, skyboxes[i].path);
+					skyboxes[i].skybox.drawSkybox(view, projection);
 			}
 
 			glDepthFunc(GL_LESS);
 
-			glUseProgram(objectShaderProgram);
-			object_shader_program.setMat4("view", view);
-			object_shader_program.setMat4("projection", projection);
-			object_shader_program.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
-			object_shader_program.setVec3("lightColor", lightColor[0], lightColor[1], lightColor[2]);
-			object_shader_program.setVec3("viewDir", cameraFront.x, cameraFront.y, cameraFront.z);
-			object_shader_program.setVec3("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
-			object_shader_program.setVec3("lightAmbient", 0.2f, 0.2f, 0.2f);
-			object_shader_program.setVec3("lightDiffuse", 0.5f, 0.5f, 0.5f);
-			object_shader_program.setVec3("lightSpecular", 1.0f, 1.0f, 1.0f);
-
+			
 			for (int i = 0; i < models.size(); i++)
 			{
 				if (models[i].mDelete)
@@ -136,16 +127,27 @@ namespace Graphic
 			
 			for (int i = 0; i < models.size(); i++)
 			{
+				glUseProgram(models[i].shader.shaderProgram);
+				models[i].shader.shader.setMat4("view", view);
+				models[i].shader.shader.setMat4("projection", projection);
+				models[i].shader.shader.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
+				models[i].shader.shader.setVec3("lightColor", lightColor[0], lightColor[1], lightColor[2]);
+				models[i].shader.shader.setVec3("viewDir", cameraFront.x, cameraFront.y, cameraFront.z);
+				models[i].shader.shader.setVec3("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
+				models[i].shader.shader.setVec3("lightAmbient", 0.2f, 0.2f, 0.2f);
+				models[i].shader.shader.setVec3("lightDiffuse", 0.5f, 0.5f, 0.5f);
+				models[i].shader.shader.setVec3("lightSpecular", 1.0f, 1.0f, 1.0f);
+
 				models[i].model_matrix = glm::mat4(1.0f);
 				models[i].model_matrix = glm::translate(models[i].model_matrix, glm::vec3(models[i].translate[0], models[i].translate[1], models[i].translate[2]));
 				models[i].model_matrix = glm::rotate(models[i].model_matrix, models[i].rotate[0],  glm::vec3(1.0f, 0.0f, 0.0f));
 				models[i].model_matrix = glm::rotate(models[i].model_matrix, models[i].rotate[1],  glm::vec3(0.0f, 1.0f, 0.0f));
 				models[i].model_matrix = glm::rotate(models[i].model_matrix, models[i].rotate[2],  glm::vec3(0.0f, 0.0f, 1.0f));
 				models[i].model_matrix = glm::scale(models[i].model_matrix, glm::vec3(models[i].scale[0], models[i].scale[1], models[i].scale[2]));
-				object_shader_program.setMat4("model", models[i].model_matrix);
+				models[i].shader.shader.setMat4("model", models[i].model_matrix);
 				if (models[i].draw)
 				{
-					models[i].model.Draw(object_shader_program);
+					models[i].model.Draw(models[i].shader.shader);
 				}
 			}
 			
@@ -180,7 +182,27 @@ namespace Graphic
 						{
 							ImGui::Selectable(simpleModels[i].name.c_str(), &simpleModels[i].makeModel, ImGuiSelectableFlags_::ImGuiSelectableFlags_DontClosePopups);
 						}
+						if (ImGui::Button("new model"))
+							newModel = true;
 						ImGui::End();
+					}
+				}
+
+				if (newModel)
+				{
+					if (ImGui::Begin("New model"))
+					{
+						ImGui::InputText("", const_cast<char*>(newModelPath.c_str()), 64);
+
+						if (ImGui::Button("Add") && !newModelPath.empty())
+						{
+							newModel = false;
+							Model model = fileLoader.getModel(newModelPath);
+							SModel sModel = { newModelPath.substr(0, newModelPath.find(".")), model };
+							sModel.shader = shaders[0];
+							simpleModels.push_back(sModel);
+							newModelPath.clear();
+						}
 					}
 				}
 
@@ -202,7 +224,7 @@ namespace Graphic
 				}
 
 
-				if (ImGui::Begin("Transformation"))
+				if (ImGui::Begin("Parameters"))
 				{
 					for (int i = 0; i < models.size(); i++)
 					{
@@ -216,9 +238,54 @@ namespace Graphic
 							ImGui::Checkbox("delete", &models[i].mDelete);
 							if (glfwGetKey(m_pWindow, GLFW_KEY_DELETE) == GLFW_PRESS)
 								models[i].mDelete = true;
+							if (ImGui::Button ("Rename"))
+							{
+								ImGui::InputText("", const_cast<char*>(newName.c_str()), 64);
+								if (glfwGetKey(m_pWindow, GLFW_KEY_ENTER))
+								{
+									models[i].name = newName;
+									newName.clear();
+								}
+							}
+							if (ImGui::Selectable(std::string("shader: " + models[i].shader.name).c_str(), true))
+							{
+								for (int j = 0; j < shaders.size(); j++)
+								{
+									ImGui::Selectable(shaders[j].name.c_str(), &shaders[j].selected);
+									if (shaders[j].selected)
+									{
+										models[j].shader = shaders[j];
+										shaders[j].selected = false;
+									}
+									if (ImGui::Button("new shader"))
+										newShader = true;
+								}
+							}
 						}
 					}
 					ImGui::End();
+				}
+
+				if (newShader)
+				{
+					if (ImGui::Begin("New shader"))
+					{
+						ImGui::InputText("", const_cast<char*>(newShaderPath.c_str()), 64);
+
+						if ((ImGui::Button("Add") || glfwGetKey(m_pWindow, GLFW_KEY_ENTER)) && !newShaderPath.empty())
+						{
+							newShader = false;
+							ShaderProgram shaderProgram = fileLoader.getShader(newShaderPath);
+							SShader shader;
+							shader.name = newShaderPath;
+							shader.shader = shaderProgram;
+							shader.shaderProgram = shaderProgram.getShaderProgram();
+							shaders.push_back(shader);
+							newShaderPath.clear();
+						}
+
+						ImGui::End();
+					}
 				}
 
 				if (ImGui::Begin("Skybox"))
@@ -264,7 +331,7 @@ namespace Graphic
 		GLFWwindow* m_pWindow = glfwCreateWindow(width, height, "Test", nullptr, nullptr);
 		if (!m_pWindow)
 		{
-			LOG_CRITICAL("Filed Create Window");
+			MessageBox(NULL, "Filed Create Window", "Error", MB_ICONERROR | MB_OK);
 			return -2;
 		}
 		glfwMakeContextCurrent(m_pWindow);
@@ -280,28 +347,29 @@ namespace Graphic
 
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 		{
-			LOG_CRITICAL("Filed Initialize GLAD");
+			MessageBox(NULL, "Filed Init Glad", "Error", MB_ICONERROR | MB_OK);
 			return -3;
 		}
 
 		stbi_set_flip_vertically_on_load(true);
 		
-		ShaderProgram object_shader = ShaderProgram("..\\..\\res\\shaders\\object.vs", "..\\..\\res\\shaders\\object.fs");
-		ShaderProgram shaders[] = { object_shader };
+		ShaderProgram object_shader = fileLoader.getShader("object");
+		SShader shader;
+		shader.name = "diffuse_shader";
+		shader.shader = object_shader;
+		shader.shaderProgram = object_shader.getShaderProgram();
+		shaders.push_back(shader);
 
 		std::vector<SModel> models = {};
 
-		MTexture texture1("..\\..\\res\\textures\\texture.png", GL_TEXTURE_2D, GL_RGBA);
-		GLuint textures[] = { texture1.getTexture() };
-
-		Skybox sea_skybox = Skybox();
-		SSkybox sea_sskybox = { "sea", "..\\..\\res\\textures\\skybox\\", sea_skybox };
-		Skybox yoko_skybox = Skybox();
-		SSkybox yoko_sskybox = { "yokohama", "..\\..\\res\\textures\\yokohama\\", yoko_skybox };
-		Skybox yoko_night_skybox = Skybox();
-		SSkybox yoko_night_sskybox = { "yokohama_night", "..\\..\\res\\textures\\yokohama_night\\", yoko_night_skybox };
-		Skybox storforsen_skybox = Skybox();
-		SSkybox storforsen_sskybox = { "storforsen", "..\\..\\res\\textures\\storforsen\\", storforsen_skybox };
+		Skybox sea_skybox = fileLoader.getSkybox("skybox");
+		SSkybox sea_sskybox = { "sea", sea_skybox };
+		Skybox yoko_skybox = fileLoader.getSkybox("yokohama");
+		SSkybox yoko_sskybox = { "yokohama", yoko_skybox };
+		Skybox yoko_night_skybox = fileLoader.getSkybox("yokohama_night");
+		SSkybox yoko_night_sskybox = { "yokohama_night", yoko_night_skybox };
+		Skybox storforsen_skybox = fileLoader.getSkybox("storforsen");
+		SSkybox storforsen_sskybox = { "storforsen", storforsen_skybox };
 
 		std::vector<SSkybox> skyboxes = { sea_sskybox, yoko_sskybox, yoko_night_sskybox, storforsen_sskybox };
 
@@ -309,11 +377,10 @@ namespace Graphic
 		ImGui::CreateContext();
 		ImGui_ImplOpenGL3_Init();
 		ImGui_ImplGlfw_InitForOpenGL(m_pWindow, true);
-		LOG_INFO("Loading: ImGui loaded");
 
 		initModels();
 
-		on_update(m_pWindow, shaders, models, skyboxes, textures, width, height);
+		on_update(m_pWindow, models, skyboxes, width, height);
 
 		return 0;
 	}

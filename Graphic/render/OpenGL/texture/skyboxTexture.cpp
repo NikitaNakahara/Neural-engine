@@ -12,7 +12,8 @@
 
 namespace Graphic
 {
-	Skybox::Skybox()
+	Skybox::Skybox(std::string path)
+		: m_path(path)
 	{}
 
 	Skybox::~Skybox()
@@ -56,18 +57,18 @@ namespace Graphic
 		return texture;
 	}
 
-	void Skybox::drawSkybox(glm::mat4 view, glm::mat4 projection, std::string path)
+	void Skybox::drawSkybox(glm::mat4 view, glm::mat4 projection)
 	{
 		if (!loaded)
 		{
 			std::vector<std::string> faces
 			{
-				path + "right.jpg",
-				path + "left.jpg",
-				path + "top.jpg",
-				path + "bottom.jpg",
-				path + "front.jpg",
-				path + "back.jpg"
+				m_path + "right.jpg",
+				m_path + "left.jpg",
+				m_path + "top.jpg",
+				m_path + "bottom.jpg",
+				m_path + "front.jpg",
+				m_path + "back.jpg"
 			};
 
 			GLuint cubeTexture = initSkybox(faces);

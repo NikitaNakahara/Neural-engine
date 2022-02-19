@@ -6,12 +6,14 @@ set(ALL_SRC
 	Application.cpp
 	Application.hpp
 	Log.hpp
+	ConfParser.cpp
+	ConfParser.hpp
 	render/OpenGL/Renderer.cpp
 	render/OpenGL/Renderer.hpp
 	render/OpenGL/Camera.cpp
 	render/OpenGL/Camera.hpp
-	render/OpenGL/Framebuffer.cpp
-	render/OpenGL/Framebuffer.hpp
+	render/OpenGL/FileLoader.cpp
+	render/OpenGL/FileLoader.hpp
 	render/OpenGL/shader/ShaderProgram.hpp
 	render/OpenGL/shader/ShaderProgram.cpp
 	render/OpenGL/shader/ShaderReader.hpp
@@ -26,6 +28,8 @@ set(ALL_SRC
 	render/OpenGL/models/ModelLoader.hpp
 	render/OpenGL/models/MeshLoader.cpp
 	render/OpenGL/models/MeshLoader.hpp
+	render/DirectX10/Renderer.cpp
+	render/DirectX10/Renderer.hpp
 )
 
 add_library(Graphic

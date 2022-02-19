@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 project(main)
 
-add_executable(main
+add_executable(main WIN32
 	main.cpp
 )
 

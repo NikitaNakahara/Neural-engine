@@ -9,9 +9,18 @@
 #include "shader/ShaderProgram.hpp"
 #include "models/ModelLoader.hpp"
 #include "texture/skyboxTexture.hpp"
+#include "FileLoader.hpp"
 
 namespace Graphic
 {
+	struct SShader
+	{
+		ShaderProgram shader;
+		GLuint shaderProgram;
+		std::string name;
+		bool selected = false;
+	};
+
 	struct SModel
 	{
 		std::string name;
@@ -25,12 +34,12 @@ namespace Graphic
 		bool makeModel = false;
 		bool mDelete = false;
 		int count = 0;
+		SShader shader;
 	};
 
 	struct SSkybox
 	{
 		std::string name;
-		std::string path;
 		Skybox skybox;
 		bool draw;
 	};
@@ -45,9 +54,8 @@ namespace Graphic
 
 	private:
 		void initModels();
-		void on_update(GLFWwindow* m_pWindow, ShaderProgram shaders[], std::vector<SModel> models, std::vector<SSkybox> skyboxes, GLuint textures[], int width, int height);
+		void on_update(GLFWwindow* m_pWindow, std::vector<SModel> models, std::vector<SSkybox> skyboxes, int width, int height);
 		void shutdown();
-		void bufferInit();
 		GLuint texture, VBO, objectVAO, EBO, quadVAO, quadVBO, FBO, RBO;
 		glm::vec3 lightPos = glm::vec3(100.f, 40.0f, 70.f);
 		glm::mat4 lastView;
@@ -62,7 +70,15 @@ namespace Graphic
 		float m_backgroundColor[4] = { 0.f, 0.f, 0.f, 0.f };
 		float rendererTextureScaleX = 1;
 		bool not_pressed = true;
+		bool newShader = false;
+		bool newModel = false;
+		std::string newShaderPath = "";
+		std::string newModelPath = "";
+		std::string newName;
 
 		std::vector<SModel> simpleModels;
+		std::vector<SShader> shaders;
+
+		Resource::FileLoader fileLoader = Resource::FileLoader();
 	};
 }

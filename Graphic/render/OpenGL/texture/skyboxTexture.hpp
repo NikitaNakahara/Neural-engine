@@ -14,11 +14,11 @@ namespace Graphic
 	class Skybox
 	{
 	public:
-		Skybox();
+		Skybox(std::string path);
 		~Skybox();
 
 		GLuint initSkybox(std::vector<std::string> faces);
-		void drawSkybox(glm::mat4 view, glm::mat4 projection, std::string path);
+		void drawSkybox(glm::mat4 view, glm::mat4 projection);
 
 		GLuint texture;
 
@@ -27,5 +27,6 @@ namespace Graphic
 		GLuint skyboxVAO, VBO;
 		ShaderProgram skyboxShader = ShaderProgram();
 		bool loaded = false;
+		std::string m_path = "";
 	};
 }
