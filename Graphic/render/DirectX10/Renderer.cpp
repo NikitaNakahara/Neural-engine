@@ -104,20 +104,20 @@ namespace Graphic
 				if (color[i])
 				{
 					if (i == 0)
-						clearColor[i] += 0.001;
-					else if (i == 1)
-						clearColor[i] += 0.01;
-					else if (i == 2)
 						clearColor[i] += 0.0001;
+					else if (i == 1)
+						clearColor[i] += 0.001;
+					else if (i == 2)
+						clearColor[i] += 0.00001;
 				}
 				else
 				{
 					if (i == 0)
-						clearColor[i] -= 0.001;
-					else if (i == 1)
-						clearColor[i] -= 0.01;
-					else if (i == 2)
 						clearColor[i] -= 0.0001;
+					else if (i == 1)
+						clearColor[i] -= 0.001;
+					else if (i == 2)
+						clearColor[i] -= 0.00001;
 				}
 			}
 

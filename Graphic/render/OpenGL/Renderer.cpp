@@ -64,11 +64,6 @@ namespace Graphic
 
 	void Renderer::on_update(GLFWwindow* m_pWindow, std::vector<SModel> models, std::vector<SSkybox> skyboxes, int width, int height)
 	{
-		glm::vec3 windows[] = {
-			glm::vec3(0.f, 0.f, 3.f),
-			glm::vec3(0.5f, 0.5f, 2.f)
-		};
-
 		Model mHeart = fileLoader.getModel("heart.obj");
 		SModel heart = { "heart", mHeart };
 
@@ -81,8 +76,12 @@ namespace Graphic
 
 		while (!glfwWindowShouldClose(m_pWindow))
 		{
-			if (glfwGetKey(m_pWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-				glfwSetWindowShouldClose(m_pWindow, true);
+			askCloseWindow(m_pWindow);
+
+			glClearColor(m_backgroundColor[0], m_backgroundColor[1], m_backgroundColor[2], m_backgroundColor[3]);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glEnable(GL_DEPTH_TEST);
+
 
 			if (glfwGetKey(m_pWindow, GLFW_KEY_L) == GLFW_PRESS &&
 				glfwGetKey(m_pWindow, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
@@ -95,223 +94,39 @@ namespace Graphic
 			}
 
 			camera.cameraMove(m_pWindow);
-
-			glm::vec3 cameraPos = camera.getCameraPos();
-			glm::vec3 cameraFront = camera.getCameraFront();
-
+			view = camera.getView();
 			projection = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 100.0f);
 
-			glClearColor(m_backgroundColor[0], m_backgroundColor[1], m_backgroundColor[2], m_backgroundColor[3]);
-			model = glm::mat4(1.0f);
-
-			view = camera.getView();
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glEnable(GL_DEPTH_TEST);
-
-			for (int i = 0; i < skyboxes.size(); i++)
-			{
-				if (skyboxes[i].draw)
-					skyboxes[i].skybox.drawSkybox(view, projection);
-			}
-
-			glDepthFunc(GL_LESS);
-
+			drawSkybox(skyboxes);
+			deleteModel(models);
+			drawModels(
+				models,
+				camera.getCameraPos(),
+				camera.getCameraFront()
 			
-			for (int i = 0; i < models.size(); i++)
-			{
-				if (models[i].mDelete)
-				{
-					models.erase(models.begin() + i);
-				}
-			}
-			
-			for (int i = 0; i < models.size(); i++)
-			{
-				glUseProgram(models[i].shader.shaderProgram);
-				models[i].shader.shader.setMat4("view", view);
-				models[i].shader.shader.setMat4("projection", projection);
-				models[i].shader.shader.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
-				models[i].shader.shader.setVec3("lightColor", lightColor[0], lightColor[1], lightColor[2]);
-				models[i].shader.shader.setVec3("viewDir", cameraFront.x, cameraFront.y, cameraFront.z);
-				models[i].shader.shader.setVec3("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
-				models[i].shader.shader.setVec3("lightAmbient", 0.2f, 0.2f, 0.2f);
-				models[i].shader.shader.setVec3("lightDiffuse", 0.5f, 0.5f, 0.5f);
-				models[i].shader.shader.setVec3("lightSpecular", 1.0f, 1.0f, 1.0f);
-
-				models[i].model_matrix = glm::mat4(1.0f);
-				models[i].model_matrix = glm::translate(models[i].model_matrix, glm::vec3(models[i].translate[0], models[i].translate[1], models[i].translate[2]));
-				models[i].model_matrix = glm::rotate(models[i].model_matrix, models[i].rotate[0],  glm::vec3(1.0f, 0.0f, 0.0f));
-				models[i].model_matrix = glm::rotate(models[i].model_matrix, models[i].rotate[1],  glm::vec3(0.0f, 1.0f, 0.0f));
-				models[i].model_matrix = glm::rotate(models[i].model_matrix, models[i].rotate[2],  glm::vec3(0.0f, 0.0f, 1.0f));
-				models[i].model_matrix = glm::scale(models[i].model_matrix, glm::vec3(models[i].scale[0], models[i].scale[1], models[i].scale[2]));
-				models[i].shader.shader.setMat4("model", models[i].model_matrix);
-				if (models[i].draw)
-				{
-					models[i].model.Draw(models[i].shader.shader);
-				}
-			}
-			
-			for (int i = 0; i < simpleModels.size(); i++)
-			{
-				if (simpleModels[i].makeModel)
-				{
-					models.push_back(simpleModels[i]);
-					if (models[models.size() - 1].name == simpleModels[i].name)
-					{
-						simpleModels[i].count++;
-						models[models.size() - 1].name += std::to_string(simpleModels[i].count);
-					}
-					simpleModels[i].makeModel = false;
-				}
-
-				ImGuiIO& io = ImGui::GetIO();
-				io.DisplaySize.x = static_cast<float>(width);
-				io.DisplaySize.y = static_cast<float>(height);
+			);
+			selectModel(m_pWindow, models);
+			addNewModel();
+			addNewShader(m_pWindow);
+			sceneObjects(models);
+			modelParameters(m_pWindow, models);
+			selectSkybox(skyboxes);
 
 
-				ImGui_ImplOpenGL3_NewFrame();
-				ImGui_ImplGlfw_NewFrame();
-				ImGui::NewFrame();
-
-				if (glfwGetKey(m_pWindow, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
-					glfwGetKey(m_pWindow, GLFW_KEY_A) == GLFW_PRESS)
-				{
-					if (ImGui::Begin("Models"))
-					{
-						for (int i = 0; i < simpleModels.size(); i++)
-						{
-							ImGui::Selectable(simpleModels[i].name.c_str(), &simpleModels[i].makeModel, ImGuiSelectableFlags_::ImGuiSelectableFlags_DontClosePopups);
-						}
-						if (ImGui::Button("new model"))
-							newModel = true;
-						ImGui::End();
-					}
-				}
-
-				if (newModel)
-				{
-					if (ImGui::Begin("New model"))
-					{
-						ImGui::InputText("", const_cast<char*>(newModelPath.c_str()), 64);
-
-						if (ImGui::Button("Add") && !newModelPath.empty())
-						{
-							newModel = false;
-							Model model = fileLoader.getModel(newModelPath);
-							SModel sModel = { newModelPath.substr(0, newModelPath.find(".")), model };
-							sModel.shader = shaders[0];
-							simpleModels.push_back(sModel);
-							newModelPath.clear();
-						}
-					}
-				}
-
-				if (ImGui::Begin("Objects"))
-				{
-					for (int i = 0; i < models.size(); i++)
-					{
-						ImGui::Checkbox(models[i].name.c_str(), &models[i].GUIselect);
-						if (models[i].GUIselect)
-						{
-							for (int j = 0; j < models.size(); j++)
-							{
-								if (j != i)
-									models[j].GUIselect = false;
-							}
-						}
-					}
-					ImGui::End();
-				}
+			ImGuiIO& io = ImGui::GetIO();
+			io.DisplaySize.x = static_cast<float>(width);
+			io.DisplaySize.y = static_cast<float>(height);
 
 
-				if (ImGui::Begin("Parameters"))
-				{
-					for (int i = 0; i < models.size(); i++)
-					{
-						if (models[i].GUIselect)
-						{
-							ImGui::Selectable(models[i].name.c_str(), true, ImGuiSelectableFlags_::ImGuiSelectableFlags_DontClosePopups);
-							ImGui::SliderFloat3("translate", models[i].translate, -3, 3);
-							ImGui::SliderFloat3("rotate", models[i].rotate, -6.28, 6.28);
-							ImGui::SliderFloat3("scale", models[i].scale, 0, 5);
-							ImGui::Checkbox("draw", &models[i].draw);
-							ImGui::Checkbox("delete", &models[i].mDelete);
-							if (glfwGetKey(m_pWindow, GLFW_KEY_DELETE) == GLFW_PRESS)
-								models[i].mDelete = true;
-							if (ImGui::Button ("Rename"))
-							{
-								ImGui::InputText("", const_cast<char*>(newName.c_str()), 64);
-								if (glfwGetKey(m_pWindow, GLFW_KEY_ENTER))
-								{
-									models[i].name = newName;
-									newName.clear();
-								}
-							}
-							if (ImGui::Selectable(std::string("shader: " + models[i].shader.name).c_str(), true))
-							{
-								for (int j = 0; j < shaders.size(); j++)
-								{
-									ImGui::Selectable(shaders[j].name.c_str(), &shaders[j].selected);
-									if (shaders[j].selected)
-									{
-										models[j].shader = shaders[j];
-										shaders[j].selected = false;
-									}
-									if (ImGui::Button("new shader"))
-										newShader = true;
-								}
-							}
-						}
-					}
-					ImGui::End();
-				}
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
 
-				if (newShader)
-				{
-					if (ImGui::Begin("New shader"))
-					{
-						ImGui::InputText("", const_cast<char*>(newShaderPath.c_str()), 64);
+			ImGui::Render();
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-						if ((ImGui::Button("Add") || glfwGetKey(m_pWindow, GLFW_KEY_ENTER)) && !newShaderPath.empty())
-						{
-							newShader = false;
-							ShaderProgram shaderProgram = fileLoader.getShader(newShaderPath);
-							SShader shader;
-							shader.name = newShaderPath;
-							shader.shader = shaderProgram;
-							shader.shaderProgram = shaderProgram.getShaderProgram();
-							shaders.push_back(shader);
-							newShaderPath.clear();
-						}
-
-						ImGui::End();
-					}
-				}
-
-				if (ImGui::Begin("Skybox"))
-				{
-					for (int i = 0; i < skyboxes.size(); i++)
-					{
-						ImGui::Checkbox(skyboxes[i].name.c_str(), &skyboxes[i].draw);
-						if (skyboxes[i].draw)
-						{
-							for (int j = 0; j < skyboxes.size(); j++)
-							{
-								if (j != i)
-									skyboxes[j].draw = false;
-							}
-						}
-					}
-					ImGui::End();
-				}
-
-
-				ImGui::Render();
-				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-				glfwPollEvents();
-				glfwSwapBuffers(m_pWindow);
-			}
+			glfwPollEvents();
+			glfwSwapBuffers(m_pWindow);
 		}
 	}
 
@@ -320,6 +135,7 @@ namespace Graphic
 		if (!glfwInit())
 		{
 			LOG_CRITICAL("Filed Initialize GLFW");
+			PostQuitMessage(E_FAIL);
 			return -1;
 		}
 
@@ -332,6 +148,7 @@ namespace Graphic
 		if (!m_pWindow)
 		{
 			MessageBox(NULL, "Filed Create Window", "Error", MB_ICONERROR | MB_OK);
+			PostQuitMessage(E_FAIL);
 			return -2;
 		}
 		glfwMakeContextCurrent(m_pWindow);
@@ -348,6 +165,7 @@ namespace Graphic
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 		{
 			MessageBox(NULL, "Filed Init Glad", "Error", MB_ICONERROR | MB_OK);
+			PostQuitMessage(E_FAIL);
 			return -3;
 		}
 
@@ -384,6 +202,234 @@ namespace Graphic
 
 		return 0;
 	}
+
+	void Renderer::deleteModel(std::vector<SModel> models)
+	{
+		for (int i = 0; i < models.size(); i++)
+		{
+			if (models[i].mDelete)
+			{
+				models.erase(models.begin() + i);
+			}
+		}
+	}
+
+	void Renderer::drawSkybox(std::vector<SSkybox> skyboxes)
+	{
+		for (int i = 0; i < skyboxes.size(); i++)
+		{
+			if (skyboxes[i].draw)
+				skyboxes[i].skybox.drawSkybox(view, projection);
+		}
+		glDepthFunc(GL_LESS);
+	}
+
+	void Renderer::drawModels(std::vector<SModel> models, glm::vec3 cameraPos, glm::vec3 cameraFront)
+	{
+		for (int i = 0; i < models.size(); i++)
+		{
+			glUseProgram(models[i].shader.shaderProgram);
+			models[i].shader.shader.setMat4("view", view);
+			models[i].shader.shader.setMat4("projection", projection);
+			models[i].shader.shader.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
+			models[i].shader.shader.setVec3("lightColor", lightColor[0], lightColor[1], lightColor[2]);
+			models[i].shader.shader.setVec3("viewDir", cameraFront.x, cameraFront.y, cameraFront.z);
+			models[i].shader.shader.setVec3("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
+			models[i].shader.shader.setVec3("lightAmbient", 0.2f, 0.2f, 0.2f);
+			models[i].shader.shader.setVec3("lightDiffuse", 0.5f, 0.5f, 0.5f);
+			models[i].shader.shader.setVec3("lightSpecular", 1.0f, 1.0f, 1.0f);
+
+			models[i].model_matrix = glm::mat4(1.0f);
+			models[i].model_matrix = glm::translate(models[i].model_matrix, glm::vec3(models[i].translate[0], models[i].translate[1], models[i].translate[2]));
+			models[i].model_matrix = glm::rotate(models[i].model_matrix, models[i].rotate[0], glm::vec3(1.0f, 0.0f, 0.0f));
+			models[i].model_matrix = glm::rotate(models[i].model_matrix, models[i].rotate[1], glm::vec3(0.0f, 1.0f, 0.0f));
+			models[i].model_matrix = glm::rotate(models[i].model_matrix, models[i].rotate[2], glm::vec3(0.0f, 0.0f, 1.0f));
+			models[i].model_matrix = glm::scale(models[i].model_matrix, glm::vec3(models[i].scale[0], models[i].scale[1], models[i].scale[2]));
+			models[i].shader.shader.setMat4("model", models[i].model_matrix);
+			if (models[i].draw)
+			{
+				models[i].model.Draw(models[i].shader.shader);
+			}
+		}
+	}
+
+	void Renderer::selectModel(GLFWwindow* m_pWindow, std::vector<SModel> models)
+	{
+		for (int i = 0; i < simpleModels.size(); i++)
+		{
+
+			if (glfwGetKey(m_pWindow, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
+				glfwGetKey(m_pWindow, GLFW_KEY_A) == GLFW_PRESS)
+				modelsGUI = true;
+
+			if (modelsGUI)
+			{
+				if (ImGui::Begin("Models"))
+				{
+					for (int i = 0; i < simpleModels.size(); i++)
+					{
+						ImGui::Selectable(simpleModels[i].name.c_str(), &simpleModels[i].makeModel, ImGuiSelectableFlags_::ImGuiSelectableFlags_DontClosePopups);
+						if (simpleModels[i].makeModel || glfwGetKey(m_pWindow, GLFW_KEY_ESCAPE))
+							modelsGUI = false;
+					}
+					if (ImGui::Button("New model"))
+						newModel = true;
+					ImGui::End();
+				}
+			}
+
+			if (simpleModels[i].makeModel)
+			{
+				models.push_back(simpleModels[i]);
+				if (models[models.size() - 1].name == simpleModels[i].name)
+				{
+					simpleModels[i].count++;
+					models[models.size() - 1].name += std::to_string(simpleModels[i].count);
+				}
+				simpleModels[i].makeModel = false;
+			}
+		}
+	}
+
+	void Renderer::addNewModel()
+	{
+		if (newModel)
+		{
+			if (ImGui::Begin("New model"))
+			{
+				ImGui::InputText("", const_cast<char*>(newModelPath.c_str()), 64);
+
+				if (ImGui::Button("Add") && !newModelPath.empty())
+				{
+					newModel = false;
+					Model model = fileLoader.getModel(newModelPath);
+					SModel sModel = { newModelPath.substr(0, newModelPath.find(".")), model };
+					sModel.shader = shaders[0];
+					simpleModels.push_back(sModel);
+					newModelPath.clear();
+				}
+
+				ImGui::End();
+			}
+		}
+	}
+
+	void Renderer::sceneObjects(std::vector<SModel> models)
+	{
+		if (ImGui::Begin("Objects"))
+		{
+			for (int i = 0; i < models.size(); i++)
+			{
+				ImGui::Checkbox(models[i].name.c_str(), &models[i].GUIselect);
+				if (models[i].GUIselect)
+				{
+					for (int j = 0; j < models.size(); j++)
+					{
+						if (j != i)
+							models[j].GUIselect = false;
+					}
+				}
+			}
+			ImGui::End();
+		}
+	}
+
+	void Renderer::modelParameters(GLFWwindow* m_pWindow, std::vector<SModel> models)
+	{
+		if (ImGui::Begin("Parameters"))
+		{
+			for (int i = 0; i < models.size(); i++)
+			{
+				if (models[i].GUIselect)
+				{
+					ImGui::Selectable(models[i].name.c_str(), true, ImGuiSelectableFlags_::ImGuiSelectableFlags_DontClosePopups);
+					ImGui::SliderFloat3("translate", models[i].translate, -3, 3);
+					ImGui::SliderFloat3("rotate", models[i].rotate, -6.28, 6.28);
+					ImGui::SliderFloat3("scale", models[i].scale, 0, 5);
+					ImGui::Checkbox("draw", &models[i].draw);
+					ImGui::Checkbox("delete", &models[i].mDelete);
+					if (glfwGetKey(m_pWindow, GLFW_KEY_DELETE) == GLFW_PRESS)
+						models[i].mDelete = true;
+					if (ImGui::Button("Rename"))
+					{
+						ImGui::InputText("", const_cast<char*>(newName.c_str()), 64);
+						if (glfwGetKey(m_pWindow, GLFW_KEY_ENTER))
+						{
+							models[i].name = newName;
+							newName.clear();
+						}
+					}
+					if (ImGui::Selectable(std::string("shader: " + models[i].shader.name).c_str(), true))
+					{
+						for (int j = 0; j < shaders.size(); j++)
+						{
+							ImGui::Selectable(shaders[j].name.c_str(), &shaders[j].selected);
+							if (shaders[j].selected)
+							{
+								models[j].shader = shaders[j];
+								shaders[j].selected = false;
+							}
+							if (ImGui::Button("new shader"))
+								newShader = true;
+						}
+					}
+				}
+			}
+			ImGui::End();
+		}
+	}
+
+	void Renderer::addNewShader(GLFWwindow* m_pWindow)
+	{
+		if (newShader)
+		{
+			if (ImGui::Begin("New shader"))
+			{
+				ImGui::InputText("", const_cast<char*>(newShaderPath.c_str()), 64);
+
+				if ((ImGui::Button("Add") || glfwGetKey(m_pWindow, GLFW_KEY_ENTER)) && !newShaderPath.empty())
+				{
+					newShader = false;
+					ShaderProgram shaderProgram = fileLoader.getShader(newShaderPath);
+					SShader shader;
+					shader.name = newShaderPath;
+					shader.shader = shaderProgram;
+					shader.shaderProgram = shaderProgram.getShaderProgram();
+					shaders.push_back(shader);
+					newShaderPath.clear();
+				}
+
+				ImGui::End();
+			}
+		}
+	}
+
+	void Renderer::selectSkybox(std::vector<SSkybox> skyboxes)
+	{
+		if (ImGui::Begin("Skybox"))
+		{
+			for (int i = 0; i < skyboxes.size(); i++)
+			{
+				ImGui::Checkbox(skyboxes[i].name.c_str(), &skyboxes[i].draw);
+				if (skyboxes[i].draw)
+				{
+					for (int j = 0; j < skyboxes.size(); j++)
+					{
+						if (j != i)
+							skyboxes[j].draw = false;
+					}
+				}
+			}
+			ImGui::End();
+		}
+	}
+
+	void Renderer::askCloseWindow(GLFWwindow* m_pWindow)
+	{
+		if (glfwGetKey(m_pWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+			glfwSetWindowShouldClose(m_pWindow, true);
+	}
+
 
 	void Renderer::shutdown()
 	{

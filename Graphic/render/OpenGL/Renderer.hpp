@@ -53,6 +53,17 @@ namespace Graphic
 		int init(unsigned int width, unsigned int height);
 
 	private:
+		void deleteModel(std::vector<SModel> models);
+		void askCloseWindow(GLFWwindow* m_pWindow);
+		void drawSkybox(std::vector<SSkybox> skyboxes);
+		void drawModels(std::vector<SModel> models, glm::vec3 cameraPos, glm::vec3 cameraFront);
+		void selectModel(GLFWwindow* m_pWindow, std::vector<SModel> models);
+		void addNewModel();
+		void sceneObjects(std::vector<SModel> models);
+		void modelParameters(GLFWwindow* m_pWindow, std::vector<SModel> models);
+		void addNewShader(GLFWwindow* m_pWindow);
+		void selectSkybox(std::vector<SSkybox> skyboxes);
+
 		void initModels();
 		void on_update(GLFWwindow* m_pWindow, std::vector<SModel> models, std::vector<SSkybox> skyboxes, int width, int height);
 		void shutdown();
@@ -72,6 +83,7 @@ namespace Graphic
 		bool not_pressed = true;
 		bool newShader = false;
 		bool newModel = false;
+		bool modelsGUI = false;
 		std::string newShaderPath = "";
 		std::string newModelPath = "";
 		std::string newName;
