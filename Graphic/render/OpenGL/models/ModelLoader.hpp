@@ -20,7 +20,7 @@ namespace Graphic
         std::string directory;
         bool gammaCorrection;
 
-        Model(const char* path);
+        Model(char* path);
         void Draw(ShaderProgram& shader);
 
     private:

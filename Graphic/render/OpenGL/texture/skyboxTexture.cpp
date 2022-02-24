@@ -12,8 +12,7 @@
 
 namespace Graphic
 {
-	Skybox::Skybox(std::string path)
-		: m_path(path)
+	Skybox::Skybox()
 	{}
 
 	Skybox::~Skybox()
@@ -27,7 +26,6 @@ namespace Graphic
 		glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
 
 		int width, height, nrChannels;
-
 
 		for (unsigned int i = 0; i < faces.size(); i++)
 		{
@@ -63,12 +61,12 @@ namespace Graphic
 		{
 			std::vector<std::string> faces
 			{
-				m_path + "right.jpg",
-				m_path + "left.jpg",
-				m_path + "top.jpg",
-				m_path + "bottom.jpg",
-				m_path + "front.jpg",
-				m_path + "back.jpg"
+				"..\\..\\res\\textures\\skybox\\right.jpg",
+				"..\\..\\res\\textures\\skybox\\left.jpg",
+				"..\\..\\res\\textures\\skybox\\top.jpg",
+				"..\\..\\res\\textures\\skybox\\bottom.jpg",
+				"..\\..\\res\\textures\\skybox\\front.jpg",
+				"..\\..\\res\\textures\\skybox\\back.jpg"
 			};
 
 			GLuint cubeTexture = initSkybox(faces);
