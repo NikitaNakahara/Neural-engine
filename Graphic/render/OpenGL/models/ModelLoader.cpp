@@ -25,7 +25,7 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
 
 namespace Graphic
 {
-    Model::Model(char* path)
+    Model::Model(const char* path)
     {
         loadModel(path);
     }

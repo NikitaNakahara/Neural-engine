@@ -26,6 +26,8 @@ set(ALL_SRC
 	render/OpenGL/models/ModelLoader.hpp
 	render/OpenGL/models/MeshLoader.cpp
 	render/OpenGL/models/MeshLoader.hpp
+	render/OpenGL/FileLoader.cpp
+	render/OpenGL/FileLoader.hpp
 )
 
 add_library(Graphic

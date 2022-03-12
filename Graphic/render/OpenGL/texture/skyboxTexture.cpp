@@ -12,7 +12,8 @@
 
 namespace Graphic
 {
-	Skybox::Skybox()
+	Skybox::Skybox(std::string name)
+		: m_name(name)
 	{}
 
 	Skybox::~Skybox()
@@ -59,15 +60,27 @@ namespace Graphic
 	{
 		if (!loaded)
 		{
+#ifdef NDEBUG
 			std::vector<std::string> faces
 			{
-				"..\\..\\res\\textures\\skybox\\right.jpg",
-				"..\\..\\res\\textures\\skybox\\left.jpg",
-				"..\\..\\res\\textures\\skybox\\top.jpg",
-				"..\\..\\res\\textures\\skybox\\bottom.jpg",
-				"..\\..\\res\\textures\\skybox\\front.jpg",
-				"..\\..\\res\\textures\\skybox\\back.jpg"
+				"res\\textures\\" + m_name + "\\right.jpg",
+				"res\\textures\\" + m_name + "\\left.jpg",
+				"res\\textures\\" + m_name + "\\top.jpg",
+				"res\\textures\\" + m_name + "\\bottom.jpg",
+				"res\\textures\\" + m_name + "\\front.jpg",
+				"res\\textures\\" + m_name + "\\back.jpg"
 			};
+#else
+			std::vector<std::string> faces
+			{
+				"..\\..\\res\\textures\\" + m_name + "\\right.jpg",
+				"..\\..\\res\\textures\\" + m_name + "\\left.jpg",
+				"..\\..\\res\\textures\\" + m_name + "\\top.jpg",
+				"..\\..\\res\\textures\\" + m_name + "\\bottom.jpg",
+				"..\\..\\res\\textures\\" + m_name + "\\front.jpg",
+				"..\\..\\res\\textures\\" + m_name + "\\back.jpg"
+			};
+#endif
 
 			GLuint cubeTexture = initSkybox(faces);
 			texture = cubeTexture;
@@ -118,7 +131,7 @@ namespace Graphic
 				 1.0f, -1.0f,  1.0f
 			};
 
-			skyboxShader = ShaderProgram("..\\..\\res\\shaders\\skybox.vs", "..\\..\\res\\shaders\\skybox.fs");
+			skyboxShader = skyboxLoader.getShader("skybox");
 			
 			shader = skyboxShader.getShaderProgram();
 			LOG_INFO("skybox shader program: {0}", shader);
